@@ -11,6 +11,7 @@ $string['description'] = 'You can upload your CSV file with usernames, emails, o
 $string['updating'] = 'Updating profile fields...';
 $string['alreadyupdated'] = 'User {$a} already has the required profile field.';
 $string['updatinguser'] = 'Updating user {$a}.';
+$string['updateduser'] = 'User updated';
 $string['fieldnotfound'] = 'Could not find {$a->field} value {$a->val}.';
 $string['done'] = 'Updating profile fields done.';
 $string['status'] = 'Updating profile fields done. Result: {$a->success} succeeded or already updated, {$a->failed} failed.';
