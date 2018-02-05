@@ -12,9 +12,7 @@ function block_csv_profile_update_users($csvcontent) {
     // Replace \r\n with \n, replace any leftover \r with \n, explode on \n
     $lines = explode("\n", preg_replace("/\r/", "\n", preg_replace("/\r\n/", "\n", $csvcontent)));
     if (end($lines) == '') {
-        return array_slice($lines, 0, count($lines) - 1, true);
-    } else {
-        return $lines;
+        $lines = array_slice($lines, 0, count($lines) - 1, true);
     }
     foreach ($lines as $line) {
         if($line=="") {
