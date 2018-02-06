@@ -6,8 +6,9 @@ function block_csv_profile_update_users($csvcontent) {
     $profilefieldid = block_csv_profile_get_profilefieldid();
 
     $stats = new StdClass();
-    $stats->success = $stats->failed = 0; //init counters
+    $stats->deleted = $stats->updatesuccess = $stats->success = $stats->failed = 0; //init counters
     $log = get_string('updating','block_csv_profile')."\r\n";
+    $generatedarray = array();
 
     // Replace \r\n with \n, replace any leftover \r with \n, explode on \n
     $lines = explode("\n", preg_replace("/\r/", "\n", preg_replace("/\r\n/", "\n", $csvcontent)));
@@ -18,37 +19,80 @@ function block_csv_profile_update_users($csvcontent) {
         if($line=="") {
             continue;
         }
-
         $fields = array_map('trim', explode(',', $line));
-
         $user = $DB->get_record('user', array($userfield => $fields[0]));
 
         if($user && !$user->deleted) {
-            $log .= get_string('updatinguser','block_csv_profile',fullname($user).' ('. $fields[1] .')')."\r\n";
+
+            $usersid = $user->id;
+
+            $parms = new stdClass();
+            $parms->userid = $usersid;
+            $parms->fieldid = $profilefieldid;
+            $parms->dataformat = '0';
+            $params = (array) $parms;
+            $infodata = $DB->get_record('user_info_data', $params, '*', IGNORE_MISSING);
+
+            if ($infodata) {$parms->data = $infodata->data; $parms->id = $infodata->id;}
 
             $data = new stdClass();
-            $data->userid        = $user->id;
+            $data->userid        = $usersid;
             $data->fieldid       = $profilefieldid;
             $data->data          = $fields[1];
             $data->dataformat    = 0;
-            $DB->insert_record('user_info_data', $data);
 
-            $log .= get_string('updateduser','block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
-            $stats->success++;
+            if ($infodata) {
+                $data->id        = $infodata->id;
+                if ($data != $parms) {
+                    $log .= get_string('updatinguser','block_csv_profile',fullname($user).' ('. $fields[1] .')')."\r\n";
+                    $DB->update_record('user_info_data', (array) $data, $bulk=false);
+                    $log .= get_string('updateduser','block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
+                    $stats->updatesuccess++;
+                }
+            } else {
+                try {
+                    $log .= get_string('updatinguser','block_csv_profile',fullname($user).' ('. $fields[1] .')')."\r\n";
+                    $DB->insert_record('user_info_data', $data);
+                    $log .= get_string('inserteduser','block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
+                    $stats->success++;
+                } catch (exception $e) {
+                    echo 'Exception: ' . $e->getMessage, "\n";
+                }
+            }
+
         } else {
             $log .= get_string('usernotfound','block_csv_profile', $fields[0]) . "\r\n";
             $stats->failed++;
         }
+        $generatedobj = new stdClass();
+        $generatedobj->userid = $usersid;
+        $generatedobj->data = $fields[1];
+        $generatedarray[$usersid] = $generatedobj;
     }    
+
+    $storedarray = $DB->get_records_sql('SELECT userid, data FROM {user_info_data} WHERE fieldid = ?', array($profilefieldid));
+    $diffs = array_udiff($storedarray, $generatedarray,
+        function ($obj_a, $obj_b) {
+            return $obj_a->userid - $obj_b->userid;
+        }
+     );
+
+    if ($diffs) {
+        foreach ($diffs as $diff) {
+            $DB->delete_records('user_info_data', array('userid' => $diff->userid, 'fieldid' => $profilefieldid));
+            $log .= get_string('deleteduser','block_csv_profile', $diff->userid . ' (' . $diff->data . ')') . "\r\n";
+            $stats->deleted++;
+        }
+    }
+
     $log .= get_string('done','block_csv_profile')."\r\n";
     $log = get_string('status','block_csv_profile',$stats).' '.get_string('updatelog','block_csv_profile')."\r\n\r\n".$log;
     return $log;
 }
 
 function block_csv_profile_get_fieldtype() {
+    $userfieldid = get_config('block_csv_profile', 'userfield');
 
-    $userfieldid = (int)get_config('csv_profile', 'userfield');
-    
     switch($userfieldid) {
     case 0:
     default:
