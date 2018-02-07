@@ -32,9 +32,7 @@ global $USER;
 require_login();
 
 $context = context_system::instance();
-if (!has_capability('block/csv_profile:uploadcsv', $context, $USER->id)) {
-    redirect(new moodle_url($CFG->wwwroot));
-}
+require_capability('block/csv_profile:uploadcsv', $context, $USER->id, true, "nopermissions");
 
 $title = get_string('csvprofile', 'block_csv_profile');
 $struser = get_string('user');
@@ -64,6 +62,8 @@ if ($mform->is_cancelled()) {
     // Upload file, store, and process csv.
     $content = $mform->get_file_content('userfile'); // Save uploaded file.
     $fs = get_file_storage();
+
+    $profilefield = $formdata->profilefield;
 
     // Cleanup old files:
     // First, create target directory.
@@ -95,7 +95,7 @@ if ($mform->is_cancelled()) {
     $newfile = $fs->create_file_from_string($fileinfo, $content);
 
     // Read CSV and get results.
-    $log = block_csv_profile_update_users($content);
+    $log = block_csv_profile_update_users($content, $profilefield);
 
     // Save log file, reuse fileinfo from csv file.
     // TODO - CHAD: $fileinfo['filename'] = "upload_".date("Ymd_His")."_log.txt";

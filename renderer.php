@@ -25,16 +25,26 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class extends Moodle plugin renderer base class
+ *
+ */
 class block_csv_profile_renderer extends plugin_renderer_base {
 
     /**
-     * Prints private files tree view
-     * @return string
+     * Prints files tree view
+     * @param int $context provides the Moodle context ID
+     * @return object/array of data for the tree
      */
     public function csv_profile_tree($context) {
         return $this->render(new csv_profile_tree($context));
     }
 
+    /**
+     * Prints private files tree view
+     * @param object/array $tree contains data for building tree
+     * @return string containing HTML
+     */
     public function render_csv_profile_tree(csv_profile_tree $tree) {
         $module = array('name' => 'block_csv_profile',
                         'fullpath' => '/blocks/csv_profile/module.js',
@@ -54,6 +64,9 @@ class block_csv_profile_renderer extends plugin_renderer_base {
 
     /**
      * Internal function - creates htmls structure suitable for YUI tree.
+     * @param object/array $tree
+     * @param string $dir
+     * @return string $result HTML data
      */
     protected function htmllize_tree($tree, $dir) {
         global $CFG;
@@ -95,9 +108,17 @@ class block_csv_profile_renderer extends plugin_renderer_base {
     }
 }
 
+/**
+ * Class extends Moodle renderable base class
+ *
+ */
 class csv_profile_tree implements renderable {
     public $context;
     public $dir;
+    /**
+     * Constructor function
+     * @param int $context
+     */
     public function __construct($context) {
         global $USER;
         $this->context = $context;

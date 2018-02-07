@@ -25,6 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class extends moodle block base class
+ */
 class block_csv_profile extends block_base {
     /**
      * Standard moodle function
@@ -90,5 +93,4 @@ class block_csv_profile extends block_base {
         }
         return $this->content;
     }
-
 }

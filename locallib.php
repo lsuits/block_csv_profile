@@ -25,10 +25,26 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-function block_csv_profile_update_users($csvcontent) {
+/**
+ * Functionality for insert/updata/delete of profile field data.
+ * Updates the appropriate $userfield based on the data from $cvsconent
+ *
+ * @param string $csvcontent CSV data from uploaded file
+ * @var string $userfield username/email/idnumber
+ * @var int $profilefieldid field to update
+ * @var object $stats collects statistics
+ * @var string $log collects data
+ * @var array $generatedarray builds an array from uploaded data for comparison
+ * @var array $lines array of lines from $csvcontent
+ * @var string $line single line from array of $lines
+ * @var array $fields fields from uploaded file
+ * @var object $user the object of the user specified in the uploaded file
+ * @return object/array $log results from processing
+ */
+function block_csv_profile_update_users($csvcontent, $profilefield) {
     global $DB, $CFG;
+
     $userfield = block_csv_profile_get_fieldtype();
-    $profilefieldid = block_csv_profile_get_profilefieldid();
 
     $stats = new StdClass();
     $stats->deleted = $stats->updatesuccess = $stats->success = $stats->failed = 0; // Init counters.
@@ -52,7 +68,7 @@ function block_csv_profile_update_users($csvcontent) {
             $usersid = $user->id;
             $parms = new stdClass();
             $parms->userid = $usersid;
-            $parms->fieldid = $profilefieldid;
+            $parms->fieldid = $profilefield;
             $parms->dataformat = '0';
             $params = (array) $parms;
             $infodata = $DB->get_record('user_info_data', $params, '*', IGNORE_MISSING);
@@ -64,7 +80,7 @@ function block_csv_profile_update_users($csvcontent) {
 
             $data = new stdClass();
             $data->userid        = $usersid;
-            $data->fieldid       = $profilefieldid;
+            $data->fieldid       = $profilefield;
             $data->data          = $fields[1];
             $data->dataformat    = 0;
 
@@ -98,7 +114,7 @@ function block_csv_profile_update_users($csvcontent) {
         $generatedarray[$usersid] = $generatedobj;
     }
 
-    $storedarray = $DB->get_records_sql('SELECT userid, data FROM {user_info_data} WHERE fieldid = ?', array($profilefieldid));
+    $storedarray = $DB->get_records_sql('SELECT userid, data FROM {user_info_data} WHERE fieldid = ?', array($profilefield));
     $diffs = array_udiff($storedarray, $generatedarray,
         function ($sobj, $gobj) {
             return $sobj->userid - $gobj->userid;
@@ -107,7 +123,7 @@ function block_csv_profile_update_users($csvcontent) {
 
     if ($diffs) {
         foreach ($diffs as $diff) {
-            $DB->delete_records('user_info_data', array('userid' => $diff->userid, 'fieldid' => $profilefieldid));
+            $DB->delete_records('user_info_data', array('userid' => $diff->userid, 'fieldid' => $profilefield));
             $log .= get_string('deleteduser', 'block_csv_profile', $diff->userid . ' (' . $diff->data . ')') . "\r\n";
             $stats->deleted++;
         }
@@ -119,6 +135,11 @@ function block_csv_profile_update_users($csvcontent) {
     return $log;
 }
 
+/**
+ * Simple case function for constants
+ *
+ * @return string username/email/idnumber
+ */
 function block_csv_profile_get_fieldtype() {
     $userfieldid = get_config('block_csv_profile', 'userfield');
 
@@ -133,12 +154,15 @@ function block_csv_profile_get_fieldtype() {
     }
 }
 
-function block_csv_profile_get_profilefieldid() {
+/**
+ * Gets the appropriate profile field id based on the configured shortname
+ *
+ * @return int $profilefieldid
+ */
+function block_csv_profile_get_default_profile_field_id() {
     global $CFG, $DB;
-
     $profilefield = (string)get_config('block_csv_profile', 'profilefield');
     $profilefid = $DB->get_record('user_info_field', array('shortname' => $profilefield));
-    $profilefieldid = $profilefid->id;
-
-    return $profilefieldid;
+    $defaultprofilefieldid = $profilefid->id;
+    return $defaultprofilefieldid;
 }

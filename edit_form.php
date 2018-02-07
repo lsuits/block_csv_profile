@@ -24,9 +24,21 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-
 require_once("$CFG->libdir/formslib.php");
+
+/**
+ * Class extends moodleform base class
+ */
 class block_csv_profile_form extends moodleform {
+
+    /**
+     * Standard Moodle function
+     *
+     * @object $mform instantiated
+     * @object $data instantiated
+     * @object $options instantiated
+     *
+     */
     public function definition() {
         $mform = $this->_form;
         $data = $this->_customdata['data'];
@@ -37,11 +49,36 @@ class block_csv_profile_form extends moodleform {
                 get_string('uploadcsv', 'block_csv_profile'),
                 null, array('accepted_types' => '*.csv'));
         $mform->addElement('filemanager', 'files_filemanager', get_string('resultfiles', 'block_csv_profile'), null, $options);
+
+        $profilefields = self::get_profile_fields();
+
+        $mform->addElement('select', 'profilefield', 'Profile Field', $profilefields);
+        $mform->setType('profilefield', PARAM_INT);
+        $mform->getElement('profilefield')->setSelected(block_csv_profile_get_default_profile_field_id());
+
         $mform->addElement('html',
                 '<style>#page-blocks-csv_profile-edit .fp-btn-add,
                  #page-blocks-csv_profile-edit .fp-btn-mkdir { display: none; }</style>'
                 );
+
         $this->add_action_buttons(true, get_string('savechanges'));
         $this->set_data($data);
+    }
+
+    /**
+     * Grab the user profile fiends from the DB and present them as key->value pairs
+     *
+     * @global $DB instantiate the DB functionality
+     * @var $fsn multidimentional array of prifile field ids and their corresponding shortnames
+     * @var $infofields array of profile field object data
+     */
+    public static function get_profile_fields() {
+        global $DB;
+        $fsn = array();
+        $infofields = $DB->get_records('user_info_field', null, null, 'id, shortname');
+        foreach ($infofields as $profilefield) {
+            $fsn[$profilefield->id] = $profilefield->shortname;
+        }
+        return $fsn;
     }
 }
