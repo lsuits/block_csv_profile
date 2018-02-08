@@ -43,11 +43,12 @@ class block_csv_profile_form extends moodleform {
         $mform = $this->_form;
         $data = $this->_customdata['data'];
         $options = $this->_customdata['options'];
+        $fpoptions = array('subdirs' => 0, 'accepted_types' => 'csv');
         $mform->setType('id', PARAM_INT);
-        $mform->addElement('static', 'name', "", get_string('description', 'block_csv_profile'));
-        $mform->addElement('filepicker', 'userfile',
-                get_string('uploadcsv', 'block_csv_profile'),
-                null, array('accepted_types' => '*.csv'));
+        $mform->addElement('static', 'name', '', get_string('description', 'block_csv_profile'));
+
+        $mform->addElement('filepicker', 'userfile', get_string('uploadcsv', 'block_csv_profile'), null, $fpoptions);
+
         $mform->addElement('filemanager', 'files_filemanager', get_string('resultfiles', 'block_csv_profile'), null, $options);
 
         $profilefields = self::get_profile_fields();

@@ -47,7 +47,7 @@ $data = new stdClass();
 $options = array('subdirs' => 1,
                  'maxbytes' => $CFG->userquota,
                  'maxfiles' => -1,
-                 'accepted_types' => '*.csv',
+                 'accepted_types' => 'csv',
                  'return_types' => FILE_INTERNAL);
 
 file_prepare_standard_filemanager($data, 'files', $options, $context, 'user', 'csvprofile', 0);
