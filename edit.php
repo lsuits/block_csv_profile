@@ -47,7 +47,7 @@ $data = new stdClass();
 $options = array('subdirs' => 1,
                  'maxbytes' => $CFG->userquota,
                  'maxfiles' => -1,
-                 'accepted_types' => 'csv',
+                 'accepted_types' => '*',
                  'return_types' => FILE_INTERNAL);
 
 file_prepare_standard_filemanager($data, 'files', $options, $context, 'user', 'csvprofile', 0);
@@ -70,7 +70,13 @@ if ($mform->is_cancelled()) {
     if (!$fs->file_exists($context->id, 'user', 'csvprofile', 0, '/', 'History')) {
         $fs->create_directory($context->id, 'user', 'csvprofile', 0, '/History/', $USER->id);
     }
-    // Second, move all files to created dir.
+
+    // Second, create logs directory.
+    if (!$fs->file_exists($context->id, 'user', 'csvprofile', 0, '/', 'Logs')) {
+        $fs->create_directory($context->id, 'user', 'csvprofile', 0, '/Logs/', $USER->id);
+    }
+
+    // Third, move all files to created dir.
     $areafiles = $fs->get_area_files($context->id, 'user', 'csvprofile', false, "filename", false);
     $filechanges = array('filepath' => '/History/');
     foreach ($areafiles as $key => $areafile) {
@@ -98,11 +104,12 @@ if ($mform->is_cancelled()) {
     $log = block_csv_profile_update_users($content, $profilefield);
 
     // Save log file, reuse fileinfo from csv file.
-    // TODO - CHAD: $fileinfo['filename'] = "upload_".date("Ymd_His")."_log.txt";
+    $fileinfo['filename'] = "upload_".date("Ymd_His")."_log.txt";
 
-    // TODO - CHAD: $newfile = $fs->create_file_from_string($fileinfo['filename'], $log);
+    // Change path for log storage.
+    $fileinfo['filepath'] = "/Logs/";
 
-    mtrace($log);
+    $newfile = $fs->create_file_from_string($fileinfo, $log);
 
     // Back to main page.
     redirect(new moodle_url($CFG->wwwroot . ('/blocks/csv_profile/edit.php')));
