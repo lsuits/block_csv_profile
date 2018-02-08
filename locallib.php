@@ -87,14 +87,14 @@ function block_csv_profile_update_users($csvcontent, $profilefield) {
             if ($infodata) {
                 $data->id        = $infodata->id;
                 if ($data != $parms) {
-                    $log .= get_string('updatinguser', 'block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
+                    $log .= get_string('updatinguser', 'block_csv_profile', fullname($user) . ' (' . $fields[1] . ')');
                     $DB->update_record('user_info_data', (array) $data, $bulk = false);
                     $log .= get_string('updateduser', 'block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
                     $stats->updatesuccess++;
                 }
             } else {
                 try {
-                    $log .= get_string('updatinguser', 'block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
+                    $log .= get_string('updatinguser', 'block_csv_profile', fullname($user) . ' (' . $fields[1] . ')');
                     $DB->insert_record('user_info_data', $data);
                     $log .= get_string('inserteduser', 'block_csv_profile', fullname($user) . ' (' . $fields[1] . ')') . "\r\n";
                     $stats->success++;
@@ -104,7 +104,7 @@ function block_csv_profile_update_users($csvcontent, $profilefield) {
             }
 
         } else {
-            $log .= get_string('usernotfound', 'block_csv_profile', $fields[0]) . "\r\n";
+            $log .= "" . get_string('usernotfound', 'block_csv_profile', $fields[0]) . "\r\n";
             $stats->failed++;
         }
 
@@ -130,8 +130,8 @@ function block_csv_profile_update_users($csvcontent, $profilefield) {
     }
 
     $log .= get_string('done', 'block_csv_profile') . "\r\n";
-    $log = get_string('status', 'block_csv_profile', $stats) . ' ' .
-        get_string('updatelog', 'block_csv_profile') . "\r\n\r\n" . $log;
+    $log = get_string('status', 'block_csv_profile', $stats) . "\r\n\r\n" .
+            $log . "\r\n\r\n" . get_string('status', 'block_csv_profile', $stats);
     return $log;
 }
 
