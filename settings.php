@@ -38,6 +38,6 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configtext('block_csv_profile/profilefield',
                                                 get_string('profilefield', 'block_csv_profile'),
-                                                get_string('profilefielddesc', 'block_csv_profile'), 
+                                                get_string('profilefielddesc', 'block_csv_profile'),
                                                 ''));
 }
